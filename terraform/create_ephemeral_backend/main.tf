@@ -9,7 +9,7 @@ resource "aws_instance" "dev_instance" {
   vpc_security_group_ids = [var.security_group_id]
 
   tags = {
-    Name = "${var.environment}.${formatdate("YYYY-MM-DD", timestamp())}"
+    Name = "Environment: ${var.environment} | Services: ${join(", ", var.services_to_deploy)}"
   }
 
   user_data = <<-EOF
