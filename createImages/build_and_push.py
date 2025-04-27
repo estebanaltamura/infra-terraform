@@ -1,6 +1,7 @@
 import os
 import subprocess
 import boto3
+import shutil
 
 # Configuraciones comunes
 AWS_REGION = "eu-north-1"
@@ -89,7 +90,21 @@ def main():
         print(f"Pusheando {service} a ECR...")
         run(f"docker push {ecr_tag}")
 
-    print("\n\033[94mTodo terminado con éxito!\033[0m")
+        # Eliminar imágenes locales
+        print(f"Eliminando imagenes locales de {service}...")
+        run(f"docker rmi {image_tag}")
+        run(f"docker rmi {ecr_tag}")   
 
+        # Eliminar carpeta local
+        print(f"Eliminando carpeta temporal {service}/...")
+        shutil.rmtree(service)
+
+    print("\n\033[94mTodo terminado con éxito!\033[0m")
+        
+        
+        
+        
 if __name__ == "__main__":
     main()
+
+

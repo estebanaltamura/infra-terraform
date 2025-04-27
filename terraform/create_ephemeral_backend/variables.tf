@@ -49,6 +49,11 @@ variable "services_to_deploy" {
   type = list(string)
 }
 
+variable "available_services" {
+  description = "Lista de servicios disponibles"
+  type = list(string)
+}
+
 
 
 

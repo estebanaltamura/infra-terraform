@@ -50,30 +50,16 @@ mkdir -p "$APP_DIR"
 
 cat <<"EOC" > "$APP_DIR/docker-compose.yml"
 version: "3.8"
-services:
-  service1:
-    image: 343668618236.dkr.ecr.eu-north-1.amazonaws.com/images/service1
-    restart: always
-    ports:
-      - "8001:80"
-    environment:
-      - ENVIRONMENT=juan
-
-  service2:
-    image: 343668618236.dkr.ecr.eu-north-1.amazonaws.com/images/service2
-    restart: always
-    ports:
-      - "8001:80"
-    environment:
-      - ENVIRONMENT=juan
-
-  service3:
-    image: 343668618236.dkr.ecr.eu-north-1.amazonaws.com/images/service3
-    restart: always
-    ports:
-      - "8001:80"
-    environment:
-      - ENVIRONMENT=juan
+services:  
+  %{ for idx, svc in var.available_services }
+    ${svc}:
+      image: ${var.ecr_registry}/images/${svc}
+      restart: always
+      ports:
+        - "800${idx + 1}:80"
+      environment:
+        - ENVIRONMENT=${var.environment}
+%{ endfor }
 EOC
 
 chown -R ubuntu:ubuntu "$APP_DIR"
