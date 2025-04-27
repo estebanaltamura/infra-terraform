@@ -42,57 +42,65 @@ unzip awscliv2.zip
 ./aws/install
   BASH
 
-  # -- 4. Generar docker-compose.yml -------
-  generate_compose = <<-BASH
-# 4) Generar docker-compose.yml
+# -- 4. Generar docker-compose.yml -------
+generate_compose = <<-BASH
+
 APP_DIR="/home/ubuntu/app"
 mkdir -p "$APP_DIR"
 
-cat <<'EOC' > "$APP_DIR/docker-compose.yml"
-version: '3.8'
+cat <<"EOC" > "$APP_DIR/docker-compose.yml"
+version: "3.8"
 services:
-%{ for svc in var.services_to_deploy ~}
-  ${svc}:
-    image: ${var.ecr_registry}/images/${svc}
+  service1:
+    image: 343668618236.dkr.ecr.eu-north-1.amazonaws.com/images/service1
     restart: always
+    ports:
+      - "8001:80"
     environment:
-      - ENVIRONMENT=${var.environment}
-%{ endfor ~}
+      - ENVIRONMENT=juan
+
+  service2:
+    image: 343668618236.dkr.ecr.eu-north-1.amazonaws.com/images/service2
+    restart: always
+    ports:
+      - "8001:80"
+    environment:
+      - ENVIRONMENT=juan
+
+  service3:
+    image: 343668618236.dkr.ecr.eu-north-1.amazonaws.com/images/service3
+    restart: always
+    ports:
+      - "8001:80"
+    environment:
+      - ENVIRONMENT=juan
 EOC
 
 chown -R ubuntu:ubuntu "$APP_DIR"
-  BASH
+BASH
 
-  # -- 5. Login en ECR y despliegue --------
-  ecr_deploy = <<-BASH
+# -- 5. Login en ECR y despliegue --------
+ecr_deploy = <<-BASH
 # 5) Login a ECR y desplegar servicios como usuario ubuntu
 runuser -l ubuntu -c 'aws ecr get-login-password --region ${var.aws_region} | docker login --username AWS --password-stdin ${var.ecr_registry}'
 
 cd "$APP_DIR"
-runuser -l ubuntu -c 'cd $APP_DIR && docker-compose up -d'
-  BASH
+sleep 2   # <<=== agregar
+
+runuser -l ubuntu -c 'cd /home/ubuntu/app && docker-compose up -d'
+BASH
 }
 
 ###############################
 # 2) RECURSO EC2 CON USERDATA #
 ###############################
-resource "aws_iam_role" "ecr_role" {
-  name = var.iam_role_name
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Effect = "Allow",
-      Principal = {
-        Service = "ec2.amazonaws.com"
-      },
-      Action = "sts:AssumeRole"
-    }]
-  })
+# data_sources.tf  
+data "aws_iam_role" "ecr_role" {
+  name = "ec2-ecr-access-role"
 }
 
-resource "aws_iam_instance_profile" "ecr_instance_profile" {
-  name = var.iam_instance_profile_name
-  role = aws_iam_role.ecr_role.name
+data "aws_iam_instance_profile" "ecr_instance_profile" {
+  name = "ecr-instance-profile"
 }
 
 resource "aws_instance" "dev_instance" {
@@ -100,7 +108,7 @@ resource "aws_instance" "dev_instance" {
   instance_type          = var.instance_type
   key_name               = var.key_name
   vpc_security_group_ids = [var.security_group_id]
-  iam_instance_profile   = aws_iam_instance_profile.ecr_instance_profile.name
+  iam_instance_profile   = data.aws_iam_instance_profile.ecr_instance_profile.name
 
 
   # Etiquetas separadas: más fáciles de filtrar en AWS

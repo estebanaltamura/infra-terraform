@@ -49,17 +49,7 @@ variable "services_to_deploy" {
   type = list(string)
 }
 
-variable "iam_role_name" {
-  description = "Nombre del IAM Role para acceso a ECR"
-  type        = string
-  default     = "ec2-ecr-access-role"
-}
 
-variable "iam_instance_profile_name" {
-  description = "Nombre del IAM Instance Profile asociado al Role"
-  type        = string
-  default     = "ecr-instance-profile"
-}
 
 
 

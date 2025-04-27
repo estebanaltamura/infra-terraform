@@ -46,27 +46,18 @@ async def create_ephemeral_backend(request: Request):
     # 4a. Terraform init & apply
 
     try:
-
         print(body["environment"])
         subprocess.run(["terraform", "init"], cwd=tf_path, check=True)
+
         subprocess.run([
-            "terraform", "import",
-            "aws_iam_role.ecr_role",
-            "ec2-ecr-access-role"
-        ], cwd=tf_path, check=False)
-        subprocess.run([
-            "terraform", "import",
-            "aws_iam_instance_profile.ecr_instance_profile",
-            "ecr-instance-profile"
-        ], cwd=tf_path, check=False)
-        
-        subprocess.run([
-            "terraform", "apply", "-auto-approve",
-            "-var", f'environment="{body["environment"]}"',  
-            "-var", f"services_to_deploy={json.dumps(body["services_to_deploy"])}",
+            "terraform", "apply",
+            "-auto-approve",
+            "-input=false",
+            f"-var=environment={body['environment']}",
+            f"-var=services_to_deploy={json.dumps(body['services_to_deploy'])}",
         ], cwd=tf_path, check=True)
     except subprocess.CalledProcessError as e:
-        raise HTTPException(status_code=500, detail=f"Terraform execution failed: {e}")
+        raise HTTPException(500, f"Terraform execution failed: {e}")
     
     # 5a. Gather outputs
     outputs = get_terraform_outputs(tf_path)
